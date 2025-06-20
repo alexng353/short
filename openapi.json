@@ -192,6 +192,34 @@
           }
         }
       }
+    },
+    "/s/{short}": {
+      "get": {
+        "operationId": "catchall",
+        "parameters": [
+          {
+            "name": "short",
+            "in": "path",
+            "description": "Short URL",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

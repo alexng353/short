@@ -13,6 +13,7 @@ use v1::{
     // muscles::MUSCLES_TAG
 };
 
+mod catchall;
 mod db;
 mod error;
 mod extractors;
@@ -91,6 +92,7 @@ async fn main() -> anyhow::Result<()> {
     let (router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
         .routes(routes!(health_check))
         .routes(routes!(index))
+        .routes(routes!(catchall::catchall))
         .with_state(state.clone())
         .nest("/api/v1", v1::router(state.clone()))
         .split_for_parts();
