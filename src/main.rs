@@ -8,6 +8,7 @@ use utoipa_swagger_ui::SwaggerUi;
 // tags
 use v1::{
     auth::AUTH_TAG,
+    shorturls::SHORTURLS_TAG,
     // exercises::EXERCISES_TAG,
     // muscles::MUSCLES_TAG
 };
@@ -32,10 +33,7 @@ pub(crate) use utoipa::ToSchema;
 #[openapi(
     tags(
         (name = AUTH_TAG, description = "Authentication API endpoints"),
-        // (name = EXERCISES_TAG, description = "Exercise API endpoints"),
-        // (name = MUSCLES_TAG, description = "Muscle API endpoints"),
-        // (name = CUSTOMER_TAG, description = "Customer API endpoints"),
-        // (name = ORDER_TAG, description = "Order API endpoints")
+        (name = SHORTURLS_TAG, description = "Short URL API endpoints"),
     ),
     modifiers(&ServerAddon)
 )]
@@ -44,10 +42,7 @@ struct ApiDoc;
 struct ServerAddon;
 impl Modify for ServerAddon {
     fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
-        openapi.servers = Some(vec![
-            Server::new("http://localhost:8080"),
-            Server::new("https://api.scale.com"),
-        ]);
+        openapi.servers = Some(vec![Server::new("http://localhost:8080")]);
     }
 }
 
@@ -78,8 +73,7 @@ async fn main() -> anyhow::Result<()> {
     let port: u16 = std::env::var("PORT")
         .unwrap_or_else(|_| "8080".to_string())
         .parse()?;
-    let jwt_secret =
-        std::env::var("JWT_SECRET").unwrap_or_else(|_| "secret".to_string());
+    let jwt_secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| "secret".to_string());
 
     if !cfg!(debug_assertions) && jwt_secret == "secret" {
         panic!("JWT_SECRET is not set. Defaulting to 'secret'");
@@ -91,8 +85,7 @@ async fn main() -> anyhow::Result<()> {
     let db = db::db().await?;
     let state = state::AppState {
         db: Arc::new(db),
-        jwt_key: Hmac::new_from_slice(jwt_secret.as_bytes())
-            .context("Failed to create HMAC")?,
+        jwt_key: Hmac::new_from_slice(jwt_secret.as_bytes()).context("Failed to create HMAC")?,
     };
 
     let (router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())

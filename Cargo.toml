@@ -14,7 +14,7 @@ serde = "1"
 serde_json = "1"
 anyhow = "1.0.92"
 sqlx = { version = "0.8.2", features = [
-  "postgres",
+  "sqlite",
   "chrono",
   "runtime-tokio-rustls",
   "macros",
@@ -29,3 +29,5 @@ hmac = "0.12.1"
 sha2 = "0.10.8"
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
+rand_core = { version = "0.6", features = ["std"] }
+nanoid = "0.4.0"

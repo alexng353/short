@@ -1,4 +1,5 @@
 use crate::*;
+use anyhow::bail;
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
     Argon2,
@@ -9,7 +10,7 @@ use util::auth::JWTClaims;
 
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct SignupBody {
-    real_name: String,
+    name: String,
     email: String,
     password: String,
 }
@@ -20,6 +21,7 @@ pub async fn signup(
     State(state): State<AppState>,
     Json(body): Json<SignupBody>,
 ) -> Result<String, AppError> {
+    return Err(Errors::Unauthorized.into());
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
 
@@ -29,17 +31,17 @@ pub async fn signup(
         .to_string();
 
     let user = query!(
-        "INSERT INTO users (real_name, email, password_hash)
-        VALUES ($1, $2, $3)
-        RETURNING id, real_name, email, password_hash, is_admin, created_at",
-        body.real_name,
-        body.email.to_lowercase(),
+        "INSERT INTO users (name, email, password_hash)
+        VALUES ($1, lower($2), $3)
+        RETURNING id, name, email, password_hash, is_admin, created_at",
+        body.name,
+        body.email,
         hash
     )
     .fetch_one(&*state.db)
     .await?;
 
-    let claims = JWTClaims::new(user.id, user.real_name, user.email);
+    let claims = JWTClaims::new(user.id, user.name, user.email);
 
     let token_str = claims
         .sign_with_key(&state.jwt_key)

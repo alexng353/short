@@ -5,10 +5,12 @@ use crate::AppState;
 
 pub mod auth;
 pub mod user;
+pub mod shorturls;
 
 pub fn router(state: AppState) -> OpenApiRouter {
     OpenApiRouter::new()
         .with_state(state.clone())
         .nest("/auth", auth::router(state.clone()))
         .nest("/user", user::router(state.clone()))
+        .nest("/shorturls", shorturls::router(state.clone()))
 }

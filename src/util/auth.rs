@@ -1,11 +1,10 @@
 use chrono::Utc;
-use uuid::Uuid;
 
 use crate::*;
 
 #[derive(Serialize, Deserialize)]
 pub struct JWTClaims {
-    pub sub: Uuid,
+    pub sub: i64,
     pub iat: i64,
     pub exp: i64,
 
@@ -14,7 +13,7 @@ pub struct JWTClaims {
 }
 
 impl JWTClaims {
-    pub fn new(sub: Uuid, real_name: String, email: String) -> Self {
+    pub fn new(sub: i64, real_name: String, email: String) -> Self {
         let iat = Utc::now().timestamp();
         let exp = iat + 60 * 60 * 24 * 7;
         Self {

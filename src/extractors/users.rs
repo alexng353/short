@@ -10,7 +10,7 @@ use util::auth::JWTClaims;
 
 /// Remember, this is FromRequestParts, so it has to be ABOVE the extractors
 /// that eat the entire request
-pub struct UserId(pub Uuid);
+pub struct UserId(pub i64);
 
 impl<S> FromRequestParts<S> for UserId
 where
@@ -19,10 +19,7 @@ where
 {
     type Rejection = AppError;
 
-    async fn from_request_parts(
-        parts: &mut Parts,
-        s: &S,
-    ) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(parts: &mut Parts, s: &S) -> Result<Self, Self::Rejection> {
         let state = AppState::from_ref(s);
 
         let jwt_string = parts

@@ -31,26 +31,25 @@ pub async fn login(
 ) -> (StatusCode, String) {
     info!("User {} logging in", body.email);
     // TODO: add indices on user for unique lowercase and search
+    let lowercase_email = body.email.to_lowercase();
     let user = query!(
-        "SELECT id, real_name, email, password_hash, is_admin, created_at
+        "SELECT id, name, email, password_hash, is_admin, created_at
         FROM users
         WHERE email = $1",
-        body.email.to_lowercase()
+        lowercase_email
     )
     .fetch_one(&*state.db)
     .await;
 
     let user = match user {
         Ok(user) => user,
-        Err(sqlx::Error::RowNotFound) => {
-            return (StatusCode::NOT_FOUND, "User not found".into())
-        }
+        Err(sqlx::Error::RowNotFound) => return (StatusCode::NOT_FOUND, "User not found".into()),
         Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
     };
 
     let argon2 = Argon2::default();
-    let hash = PasswordHash::parse(&user.password_hash, Encoding::B64)
-        .expect("Password hashing failed");
+    let hash =
+        PasswordHash::parse(&user.password_hash, Encoding::B64).expect("Password hashing failed");
 
     if !argon2
         .verify_password(body.password.as_bytes(), &hash)
@@ -59,7 +58,7 @@ pub async fn login(
         return (StatusCode::UNAUTHORIZED, "Incorrect password".into());
     }
 
-    let claims = JWTClaims::new(user.id, user.real_name, user.email);
+    let claims = JWTClaims::new(user.id, user.name, user.email);
     let token_str = match claims.sign_with_key(&state.jwt_key) {
         Ok(token_str) => token_str,
         Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),

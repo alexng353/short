@@ -8,4 +8,4 @@ pub struct AppState {
     pub jwt_key: Hmac<Sha256>,
 }
 
-pub type DB = Arc<sqlx::Pool<sqlx::Postgres>>;
+pub type DB = Arc<sqlx::Pool<sqlx::Sqlite>>;

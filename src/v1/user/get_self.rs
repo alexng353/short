@@ -2,8 +2,8 @@ use crate::{extractors::users::UserId, *};
 
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct UserResponse {
-    id: uuid::Uuid,
-    real_name: String,
+    id: i64,
+    name: String,
     email: String,
 }
 
@@ -23,7 +23,7 @@ pub async fn get_self(
 ) -> Result<Json<UserResponse>, AppError> {
     let user = sqlx::query_as!(
         UserResponse,
-        "SELECT id, real_name, email
+        "SELECT id, name, email
         FROM users
         WHERE id = $1",
         user_id
