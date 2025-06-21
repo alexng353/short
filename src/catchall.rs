@@ -1,6 +1,9 @@
 use axum::{
     extract::{Path, State},
-    http::{header::LOCATION, StatusCode},
+    http::{
+        header::{CACHE_CONTROL, LOCATION},
+        StatusCode,
+    },
     response::{IntoResponse, Response},
 };
 use tracing::error;
@@ -18,6 +21,11 @@ use crate::{structs::shortlink::ShortLink, AppState};
     )
 )]
 pub async fn catchall(State(state): State<AppState>, Path(short): Path<String>) -> Response {
+    let ttl = std::env::var("TTL")
+        .unwrap_or("3600".to_string())
+        .parse::<u32>()
+        .unwrap();
+
     match sqlx::query_as!(
         ShortLink,
         "SELECT * FROM shortlinks WHERE short = $1",
@@ -26,7 +34,17 @@ pub async fn catchall(State(state): State<AppState>, Path(short): Path<String>) 
     .fetch_one(&*state.db)
     .await
     {
-        Ok(long) => (StatusCode::OK, [(LOCATION, long.long)]).into_response(),
+        Ok(long) => (
+            StatusCode::TEMPORARY_REDIRECT,
+            [
+                (LOCATION, long.long),
+                (
+                    CACHE_CONTROL,
+                    format!("public, max-age={ttl}, s-maxage={ttl}"),
+                ),
+            ],
+        )
+            .into_response(),
         Err(sqlx::Error::RowNotFound) => {
             (StatusCode::NOT_FOUND, "Short URL not found").into_response()
         }
