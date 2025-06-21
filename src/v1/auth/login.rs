@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{structs::user::User, *};
 use argon2::{
     password_hash::{Encoding, PasswordHash, PasswordVerifier},
     Argon2,
@@ -10,7 +10,7 @@ use util::auth::JWTClaims;
 
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct LoginBody {
-    email: String,
+    username: String,
     password: String,
 }
 
@@ -29,14 +29,15 @@ pub async fn login(
     State(state): State<AppState>,
     Json(body): Json<LoginBody>,
 ) -> (StatusCode, String) {
-    info!("User {} logging in", body.email);
+    info!("User {} logging in", body.username);
     // TODO: add indices on user for unique lowercase and search
-    let lowercase_email = body.email.to_lowercase();
-    let user = query!(
-        "SELECT id, name, email, password_hash, is_admin, created_at
+    let lowercase_username = body.username.to_lowercase();
+    let user = sqlx::query_as!(
+        User,
+        "SELECT id, name, username, password_hash, is_admin, created_at
         FROM users
-        WHERE email = $1",
-        lowercase_email
+        WHERE username = $1",
+        lowercase_username
     )
     .fetch_one(&*state.db)
     .await;
@@ -58,7 +59,7 @@ pub async fn login(
         return (StatusCode::UNAUTHORIZED, "Incorrect password".into());
     }
 
-    let claims = JWTClaims::new(user.id, user.name, user.email);
+    let claims = JWTClaims::new(user.id, user.name, user.username);
     let token_str = match claims.sign_with_key(&state.jwt_key) {
         Ok(token_str) => token_str,
         Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),

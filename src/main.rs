@@ -1,3 +1,4 @@
+use argon2::password_hash::PasswordHasher;
 use hmac::{Hmac, Mac};
 use std::{net::Ipv4Addr, sync::Arc};
 use tokio::net::TcpListener;
@@ -75,6 +76,8 @@ async fn main() -> anyhow::Result<()> {
         .unwrap_or_else(|_| "8080".to_string())
         .parse()?;
     let jwt_secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| "secret".to_string());
+    let admin_password =
+        std::env::var("ADMIN_PASSWORD").unwrap_or_else(|_| "adminadmin".to_string());
 
     if !cfg!(debug_assertions) && jwt_secret == "secret" {
         panic!("JWT_SECRET is not set. Defaulting to 'secret'");
@@ -88,6 +91,24 @@ async fn main() -> anyhow::Result<()> {
         db: Arc::new(db),
         jwt_key: Hmac::new_from_slice(jwt_secret.as_bytes()).context("Failed to create HMAC")?,
     };
+
+    {
+        let salt = argon2::password_hash::SaltString::generate(&mut rand_core::OsRng);
+        let argon2 = argon2::Argon2::default();
+        let hash = argon2
+            .hash_password(admin_password.as_bytes(), &salt)
+            .expect("Password hashing failed")
+            .to_string();
+
+        sqlx::query!(
+            "INSERT INTO users (id, name, username, password_hash, is_admin)
+                VALUES (1, 'admin', 'admin', $1, true)
+                ON CONFLICT DO NOTHING",
+            hash
+        )
+        .execute(&*state.db)
+        .await?;
+    }
 
     let (router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
         .routes(routes!(health_check))

@@ -11,7 +11,7 @@ use util::auth::JWTClaims;
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct SignupBody {
     name: String,
-    email: String,
+    username: String,
     password: String,
 }
 
@@ -31,17 +31,17 @@ pub async fn signup(
         .to_string();
 
     let user = query!(
-        "INSERT INTO users (name, email, password_hash)
+        "INSERT INTO users (name, username, password_hash)
         VALUES ($1, lower($2), $3)
-        RETURNING id, name, email, password_hash, is_admin, created_at",
+        RETURNING id, name, username, password_hash, is_admin, created_at",
         body.name,
-        body.email,
+        body.username,
         hash
     )
     .fetch_one(&*state.db)
     .await?;
 
-    let claims = JWTClaims::new(user.id, user.name, user.email);
+    let claims = JWTClaims::new(user.id, user.name, user.username);
 
     let token_str = claims
         .sign_with_key(&state.jwt_key)
