@@ -5,7 +5,6 @@ use argon2::{
 };
 use axum::http::StatusCode;
 use jwt::SignWithKey;
-use sqlx::query;
 use util::auth::JWTClaims;
 
 #[derive(Serialize, Deserialize, ToSchema)]

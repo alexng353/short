@@ -1,5 +1,4 @@
 use crate::*;
-use anyhow::bail;
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
     Argon2,
@@ -10,6 +9,7 @@ use util::auth::JWTClaims;
 
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct SignupBody {
+    invite_code: String,
     name: String,
     username: String,
     password: String,
@@ -21,7 +21,34 @@ pub async fn signup(
     State(state): State<AppState>,
     Json(body): Json<SignupBody>,
 ) -> Result<String, AppError> {
-    return Err(Errors::Unauthorized.into());
+    if body.invite_code.is_empty() {
+        return Err(Errors::Unauthorized.into());
+    }
+
+    let invite_code = sqlx::query!(
+        "SELECT * FROM invite_codes WHERE code = $1",
+        body.invite_code
+    )
+    .fetch_optional(&*state.db)
+    .await?;
+
+    match invite_code {
+        Some(invite_code) => match invite_code.used_at {
+            Some(_) => return Err(Errors::Unauthorized.into()),
+            None => {
+                sqlx::query!(
+                    "UPDATE invite_codes SET used_at = (datetime('now', 'localtime')) WHERE code = $1",
+                    body.invite_code
+                )
+                .execute(&*state.db)
+                .await?;
+            }
+        },
+        None => {
+            return Err(Errors::Unauthorized.into());
+        }
+    }
+
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
 

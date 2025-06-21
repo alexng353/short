@@ -57,30 +57,22 @@ impl IntoResponse for AppError {
             AppError::Error(e) => match e {
                 Errors::TooBig(size_limit) => (
                     StatusCode::BAD_REQUEST,
-                    format!(
-                        "Value cannot be greater than {} bytes",
-                        size_limit
-                    ),
+                    format!("Value cannot be greater than {} bytes", size_limit),
                 )
                     .into_response(),
 
                 Errors::SqlxError(_) => {
-                    (StatusCode::INTERNAL_SERVER_ERROR, "Something went wrong")
-                        .into_response()
+                    (StatusCode::INTERNAL_SERVER_ERROR, "Something went wrong").into_response()
                 }
 
                 Errors::Ise(e) => {
-                    (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
-                        .into_response()
+                    (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response()
                 }
 
-                Errors::Unauthorized => {
-                    (StatusCode::UNAUTHORIZED, "Unauthorized").into_response()
-                }
+                Errors::Unauthorized => (StatusCode::UNAUTHORIZED, "Unauthorized").into_response(),
 
                 Errors::Unimplemented => {
-                    (StatusCode::NOT_IMPLEMENTED, "Not implemented")
-                        .into_response()
+                    (StatusCode::NOT_IMPLEMENTED, "Not implemented").into_response()
                 }
 
                 Errors::JWTExpired => (
