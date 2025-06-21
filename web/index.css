@@ -1,0 +1,41 @@
+body {
+  background-color: #0a0a0a;
+  color: #aaa;
+  font-family: sans-serif;
+}
+
+.contentbox {
+  display: flex;
+  justify-content: center;
+}
+
+.contentbox>* {
+  max-width: 1024px;
+  width: 100%;
+}
+
+.navbar {
+  max-width: 1024px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.horizontal {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

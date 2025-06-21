@@ -2,6 +2,7 @@ use argon2::password_hash::PasswordHasher;
 use hmac::{Hmac, Mac};
 use std::{net::Ipv4Addr, sync::Arc};
 use tokio::net::TcpListener;
+use tower_http::services::ServeDir;
 use utoipa::{openapi::Server, Modify, OpenApi};
 use utoipa_axum::{router::OpenApiRouter, routes};
 use utoipa_swagger_ui::SwaggerUi;
@@ -25,7 +26,7 @@ mod v1;
 
 pub(crate) use anyhow::Context;
 pub(crate) use axum::extract::{Json, State};
-pub(crate) use error::{AnyhowError, AppError, Errors};
+pub(crate) use error::{AppError, Errors};
 pub(crate) use serde::{Deserialize, Serialize};
 pub(crate) use state::AppState;
 pub(crate) use tracing::{debug, error, info, trace, warn};
@@ -58,15 +59,6 @@ impl Modify for ServerAddon {
 )]
 async fn health_check() -> &'static str {
     "ok"
-}
-
-#[utoipa::path(
-    get, path = "/", responses(
-        (status = OK, description = "Success", body = str, content_type = "text/plain")
-    )
-)]
-async fn index() -> &'static str {
-    "ok 200"
 }
 
 #[tokio::main]
@@ -112,10 +104,10 @@ async fn main() -> anyhow::Result<()> {
 
     let (router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
         .routes(routes!(health_check))
-        .routes(routes!(index))
         .routes(routes!(catchall::catchall))
         .with_state(state.clone())
         .nest("/api/v1", v1::router(state.clone()))
+        .fallback_service(ServeDir::new("web"))
         .split_for_parts();
 
     std::fs::write("openapi.json", api.to_pretty_json()?.as_bytes()).unwrap();

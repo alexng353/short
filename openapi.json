@@ -14,23 +14,6 @@
     }
   ],
   "paths": {
-    "/": {
-      "get": {
-        "operationId": "index",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/.well-known/health-check": {
       "get": {
         "summary": "Get health of the API.",
@@ -49,6 +32,16 @@
         }
       }
     },
+    "/api/v1/auth/invite": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "create invite",
+        "operationId": "invite",
+        "responses": {}
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "tags": [
@@ -58,7 +51,7 @@
         "operationId": "login",
         "requestBody": {
           "content": {
-            "application/json": {
+            "application/x-www-form-urlencoded": {
               "schema": {
                 "$ref": "#/components/schemas/LoginBody"
               }
@@ -109,7 +102,7 @@
         "operationId": "signup",
         "requestBody": {
           "content": {
-            "application/json": {
+            "application/x-www-form-urlencoded": {
               "schema": {
                 "$ref": "#/components/schemas/SignupBody"
               }
@@ -227,14 +220,14 @@
       "LoginBody": {
         "type": "object",
         "required": [
-          "email",
+          "username",
           "password"
         ],
         "properties": {
-          "email": {
+          "password": {
             "type": "string"
           },
-          "password": {
+          "username": {
             "type": "string"
           }
         }
@@ -259,18 +252,22 @@
       "SignupBody": {
         "type": "object",
         "required": [
+          "invite_code",
           "name",
-          "email",
+          "username",
           "password"
         ],
         "properties": {
-          "email": {
+          "invite_code": {
             "type": "string"
           },
           "name": {
             "type": "string"
           },
           "password": {
+            "type": "string"
+          },
+          "username": {
             "type": "string"
           }
         }
@@ -280,17 +277,17 @@
         "required": [
           "id",
           "name",
-          "email"
+          "username"
         ],
         "properties": {
-          "email": {
-            "type": "string"
-          },
           "id": {
             "type": "integer",
             "format": "int64"
           },
           "name": {
+            "type": "string"
+          },
+          "username": {
             "type": "string"
           }
         }

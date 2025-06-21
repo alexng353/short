@@ -3,6 +3,14 @@ use argon2::{
     password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
     Argon2,
 };
+use axum::{
+    http::{
+        header::{LOCATION, SET_COOKIE},
+        StatusCode,
+    },
+    response::{IntoResponse, Response},
+    Form,
+};
 use jwt::SignWithKey;
 use sqlx::query;
 use util::auth::JWTClaims;
@@ -19,8 +27,8 @@ pub struct SignupBody {
 #[utoipa::path(post, path = "/signup", responses((status = OK, body = String)), tag = super::AUTH_TAG)]
 pub async fn signup(
     State(state): State<AppState>,
-    Json(body): Json<SignupBody>,
-) -> Result<String, AppError> {
+    Form(body): Form<SignupBody>,
+) -> Result<Response, AppError> {
     if body.invite_code.is_empty() {
         return Err(Errors::Unauthorized.into());
     }
@@ -74,5 +82,18 @@ pub async fn signup(
         .sign_with_key(&state.jwt_key)
         .context("Failed to sign JWT")?;
 
-    Ok(token_str)
+    Ok((
+        StatusCode::SEE_OTHER,
+        [
+            (
+                SET_COOKIE,
+                if cfg!(debug_assertions) {
+                    format!("short-token={token_str}; Max-Age=86400; Path=/; HttpOnly")
+                } else {
+                    format!("__Secure-short-token={token_str}; Max-Age=86400; Path=/; HttpOnly; SameSite=Strict; Secure")
+                },
+            ),
+            (LOCATION, "/dashboard".into()),
+        ],
+    ).into_response())
 }

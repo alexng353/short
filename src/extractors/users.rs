@@ -4,6 +4,7 @@ use axum::{
     http::{header, request::Parts},
 };
 
+use cookie::ParseError;
 use jwt::VerifyWithKey;
 use sqlx::types::Uuid;
 use util::auth::JWTClaims;
@@ -22,15 +23,30 @@ where
     async fn from_request_parts(parts: &mut Parts, s: &S) -> Result<Self, Self::Rejection> {
         let state = AppState::from_ref(s);
 
-        let jwt_string = parts
+        // let authorization = parts
+        //     .headers
+        //     .get(header::AUTHORIZATION)
+        //     .ok_or(AppError::Error(Errors::Unauthorized))?
+        //     .to_str()
+        //     .map_err(|_| AppError::Error(Errors::Unauthorized))?
+        //     .trim_start_matches("Bearer ");
+
+        let cookie = parts
             .headers
-            .get(header::AUTHORIZATION)
+            .get(header::COOKIE)
             .ok_or(AppError::Error(Errors::Unauthorized))?
             .to_str()
-            .map_err(|_| AppError::Error(Errors::Unauthorized))?
-            .trim_start_matches("Bearer ");
+            .map_err(|_| AppError::Error(Errors::Unauthorized))?;
+        let cookie = cookie::Cookie::split_parse(cookie)
+            .collect::<Result<Vec<_>, ParseError>>()
+            .map_err(|_| AppError::Error(Errors::Unauthorized))?;
+        let cookie = cookie
+            .into_iter()
+            .find(|c| c.name() == "short-token" || c.name() == "__Secure-short-token")
+            .ok_or(AppError::Error(Errors::Unauthorized))?;
 
-        let claims: JWTClaims = jwt_string
+        let claims: JWTClaims = cookie
+            .value_trimmed()
             .verify_with_key(&state.jwt_key)
             .map_err(|_| AppError::Error(Errors::Unauthorized))?;
 

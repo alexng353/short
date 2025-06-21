@@ -3,7 +3,14 @@ use argon2::{
     password_hash::{Encoding, PasswordHash, PasswordVerifier},
     Argon2,
 };
-use axum::http::StatusCode;
+use axum::{
+    http::{
+        header::{LOCATION, SET_COOKIE},
+        StatusCode,
+    },
+    response::{IntoResponse, Response},
+    Form,
+};
 use jwt::SignWithKey;
 use util::auth::JWTClaims;
 
@@ -26,8 +33,9 @@ pub struct LoginBody {
 )]
 pub async fn login(
     State(state): State<AppState>,
-    Json(body): Json<LoginBody>,
-) -> (StatusCode, String) {
+    Form(body): Form<LoginBody>,
+    // Json(body): Json<LoginBody>,
+) -> Response {
     info!("User {} logging in", body.username);
     // TODO: add indices on user for unique lowercase and search
     let lowercase_username = body.username.to_lowercase();
@@ -43,8 +51,10 @@ pub async fn login(
 
     let user = match user {
         Ok(user) => user,
-        Err(sqlx::Error::RowNotFound) => return (StatusCode::NOT_FOUND, "User not found".into()),
-        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+        Err(sqlx::Error::RowNotFound) => {
+            return (StatusCode::NOT_FOUND, "User not found").into_response()
+        }
+        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     };
 
     let argon2 = Argon2::default();
@@ -55,14 +65,27 @@ pub async fn login(
         .verify_password(body.password.as_bytes(), &hash)
         .is_ok()
     {
-        return (StatusCode::UNAUTHORIZED, "Incorrect password".into());
+        return (StatusCode::UNAUTHORIZED, "Incorrect password").into_response();
     }
 
     let claims = JWTClaims::new(user.id, user.name, user.username);
     let token_str = match claims.sign_with_key(&state.jwt_key) {
         Ok(token_str) => token_str,
-        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     };
 
-    (StatusCode::OK, token_str)
+    (
+        StatusCode::SEE_OTHER,
+        [
+            (
+                SET_COOKIE,
+                if cfg!(debug_assertions) {
+                    format!("short-token={token_str}; Max-Age=86400; Path=/; HttpOnly")
+                } else {
+                    format!("__Secure-short-token={token_str}; Max-Age=86400; Path=/; HttpOnly; SameSite=Strict; Secure")
+                },
+            ),
+            (LOCATION, "/dashboard".into()),
+        ],
+    ).into_response()
 }

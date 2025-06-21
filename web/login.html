@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+  <script src="index.js" defer></script>
+  <link rel="stylesheet" href="index.css" />
+</head>
+
+<body class="contentbox">
+  <div>
+    <div class="navbar">
+      <!-- navbar -->
+
+      <h1>alexng353/short</h1>
+      <div class="horizontal center">
+        <a href="https://github.com/alexng353/short">
+          github
+        </a>
+        <a href="./login.html">
+          login
+        </a>
+      </div>
+
+    </div>
+    <div class="center vertical">
+      <h1>Login</h1>
+      <form action="/api/v1/auth/login" method="post" class="vertical">
+        <input type="text" name="username" placeholder="Username" />
+        <input type="password" name="password" placeholder="Password" />
+        <button type="submit">Login</button>
+      </form>
+    </div>
+  </div>
+</body>
+
+</html>
