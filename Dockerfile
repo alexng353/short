@@ -17,5 +17,6 @@ FROM rust:1.87
 WORKDIR /app
 
 COPY --from=builder /app/target/release/short /app/short
+COPY --from=builder /app/web /app/web
 
 CMD [ "/app/short" ]
