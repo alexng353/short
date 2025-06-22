@@ -1,5 +1,6 @@
 use argon2::password_hash::PasswordHasher;
 use hmac::{Hmac, Mac};
+use sqlx::migrate::Migrator;
 use std::{net::Ipv4Addr, sync::Arc};
 use tokio::net::TcpListener;
 use tower_http::services::ServeDir;
@@ -63,6 +64,9 @@ async fn health_check() -> &'static str {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    let subscriber = tracing_subscriber::FmtSubscriber::new();
+    tracing::subscriber::set_global_default(subscriber)?;
+
     dotenv::dotenv().ok();
     let port: u16 = std::env::var("PORT")
         .unwrap_or_else(|_| "8080".to_string())
@@ -76,18 +80,17 @@ async fn main() -> anyhow::Result<()> {
     }
 
     {
+        info!("Checking if database file exists");
         let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL is not set");
         let dbfile = database_url.trim_start_matches("sqlite://");
         if !std::path::Path::new(dbfile).exists() {
             info!("Database file {} does not exist. Creating it.", dbfile);
-            std::fs::create_dir_all(dbfile).unwrap();
+            std::fs::write(dbfile, "").unwrap();
         }
     }
 
-    let subscriber = tracing_subscriber::FmtSubscriber::new();
-    tracing::subscriber::set_global_default(subscriber)?;
-
     let db = db::db().await?;
+    sqlx::migrate!().run(&db).await.unwrap();
     let state = state::AppState {
         db: Arc::new(db),
         jwt_key: Hmac::new_from_slice(jwt_secret.as_bytes()).context("Failed to create HMAC")?,
