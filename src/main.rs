@@ -127,7 +127,13 @@ async fn main() -> anyhow::Result<()> {
     let swagger_ui = SwaggerUi::new("/docs").url("/docs/openapi.json", api);
     let router = router.merge(swagger_ui);
 
-    let listener = match TcpListener::bind((Ipv4Addr::LOCALHOST, port)).await {
+    let host = if std::env::var("RAILWAY_PROJECT_ID").is_ok() {
+        Ipv4Addr::UNSPECIFIED
+    } else {
+        Ipv4Addr::LOCALHOST
+    };
+
+    let listener = match TcpListener::bind((host, port)).await {
         Ok(listener) => {
             info!("Listening on http://localhost:{port}");
             listener
