@@ -18,7 +18,7 @@ use super::*;
 
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct ChangePasswordBody {
-    change_password: String,
+    old_password: String,
     new_password: String,
 }
 
@@ -61,7 +61,7 @@ pub async fn change_password(
         PasswordHash::parse(&user.password_hash, Encoding::B64).expect("Password hashing failed");
 
     if !argon2
-        .verify_password(body.change_password.as_bytes(), &hash)
+        .verify_password(body.old_password.as_bytes(), &hash)
         .is_ok()
     {
         return (StatusCode::UNAUTHORIZED, "Incorrect password").into_response();
