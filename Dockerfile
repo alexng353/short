@@ -1,0 +1,19 @@
+FROM rust:1.87 as builder
+
+WORKDIR /app
+
+RUN cargo install sqlx-cli
+
+COPY . .
+
+RUN DATABASE_URL=build.db cargo sqlx migrate run
+
+RUN DATABASE_URL=build.db cargo build --release
+
+FROM debian:bullseye-slim
+
+WORKDIR /app
+
+COPY --from=builder /app/target/release/short /app/short
+
+CMD [ "/app/short" ]

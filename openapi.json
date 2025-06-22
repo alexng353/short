@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "scale-api",
+    "title": "short",
     "description": "",
     "license": {
       "name": ""
@@ -122,6 +122,37 @@
             }
           }
         }
+      }
+    },
+    "/api/v1/shorturls/delete/{id}": {
+      "delete": {
+        "tags": [
+          "shorturls"
+        ],
+        "summary": "Create a new short URL",
+        "operationId": "delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/api/v1/shorturls/myurls": {
+      "get": {
+        "tags": [
+          "shorturls"
+        ],
+        "summary": "Create a new short URL",
+        "operationId": "myurls",
+        "responses": {}
       }
     },
     "/api/v1/shorturls/new": {

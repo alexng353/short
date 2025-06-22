@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Document</title>
-  <script src="index.js" defer></script>
-  <link rel="stylesheet" href="index.css" />
+  <link rel="stylesheet" href="/index.css" />
+  <link rel="stylesheet" href="/dashboard/dashboard.css" />
 </head>
 
 <body class="contentbox">
@@ -16,24 +16,141 @@
 
       <h1>alexng353/short</h1>
       <div class="horizontal center">
-        <a href="https://github.com/alexng353/short">
-          github
-        </a>
-        <a href="./login.html">
-          login
-        </a>
+        <a href="https://github.com/alexng353/short">github</a>
+        <a href="/login.html">login</a>
       </div>
-
     </div>
-    <div class="center vertical">
-      <h1>Dashboard</h1>
-      <div class="center">
-        <div class="vertical">
-          <div class="horizontal">
-              balls
-          </div>
+    <div class="vertical">
+      <h2>Dashboard</h2>
+      <div class="vertical">
+        <div id="new-link">
+          <form id="new-link-form">
+            <input type="text" name="long" placeholder="Long URL" />
+            <input type="text" name="short" placeholder="Short URL" />
+            <button type="submit">Create</button>
+          </form>
         </div>
+        <table id="linksTable">
+          <thead>
+            <tr>
+              <th>Copy</th>
+              <th>Long URL</th>
+              <th>Short URL</th>
+              <th>Delete</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- rows will be injected here -->
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
+
+  <script defer>
+    // OnLoad Function
+    async function getMyLinks(page = 1, limit = 10) {
+      console.log(`Loading page ${page} with limit ${limit}`);
+      const response = await fetch(
+        `/api/v1/shorturls/myurls?page=${page}&limit=${limit}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          credentials: "include",
+        },
+      );
+      const data = await response.json();
+      return data;
+    }
+
+    function loadMyLinks() {
+      const params = new URLSearchParams(window.location.search);
+      const page = params.get("page") ?? 1;
+      const limit = params.get("limit") ?? 10;
+      getMyLinks(page, limit).then((data) => {
+        if (data.length === 0) {
+          document.getElementById("#linksTable tbody").innerHTML = '';
+          return;
+        }
+
+        const currentURL = window.location.origin
+
+        const tbody = document.querySelector('#linksTable tbody');
+
+        tbody.innerHTML = data.map(link => `
+  <tr>
+    <td>
+      <button
+        class="copy-link"
+        onclick="navigator.clipboard.writeText('${currentURL}/s/${link.short}')"
+      >
+        Copy
+      </button>
+    </td>
+    <td>
+      <a href="${link.long}" target="_blank" rel="noopener">
+        ${link.long}
+      </a>
+    </td>
+    <td>
+      <a href="${currentURL}/s/${link.short}" target="_blank" rel="noopener">
+        ${currentURL}/s/${link.short}
+      </a>
+    </td>
+    <td>
+      <button class="delete-link" onclick="deleteLink(${link.id})">
+        Delete
+      </button>
+    </td>
+  </tr>
+`).join('');
+        document.getElementById("my-links").innerHTML = links.join("");
+      });
+    }
+
+    function deleteLink(id) {
+      const response = fetch(`/api/v1/shorturls/delete/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "include",
+      });
+      response.then((data) => {
+        loadMyLinks();
+      });
+    }
+
+    loadMyLinks();
+  </script>
+
+  <script defer>
+    document
+      .getElementById("new-link-form")
+      .addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const long = form.long.value;
+        const short =
+          form.short.value.trim() === "" ? undefined : form.short.value;
+        const response = await fetch("/api/v1/shorturls/new", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({long, short}),
+          credentials: "include",
+        });
+        const data = await response.json();
+        console.log(data);
+        loadMyLinks();
+      });
+  </script>
 </body>
+
+</html>
