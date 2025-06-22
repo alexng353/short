@@ -6,9 +6,11 @@ RUN cargo install sqlx-cli
 
 COPY . .
 
-RUN DATABASE_URL=build.db cargo sqlx migrate run
+RUN touch build.db
 
-RUN DATABASE_URL=build.db cargo build --release
+RUN DATABASE_URL=sqlite://build.db cargo sqlx migrate run
+
+RUN DATABASE_URL=sqlite://build.db cargo build --release
 
 FROM debian:bullseye-slim
 
