@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invite</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Invite</h1>
+    </div>
+    <div class="content">
+      <button id="invite-btn">Invite</button>
+      <div>
+        <p>Invite Code: <span id="invite-response"></span></p>
+      </div>
+    </div>
+  </div>
+  <script>
+    const inviteBtn = document.getElementById('invite-btn');
+
+    inviteBtn.addEventListener('click', async () => {
+      const response = await fetch('/api/v1/auth/invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.text();
+      document.getElementById('invite-response').innerHTML =
+        `<button onclick="navigator.clipboard.writeText('${data}')">
+          Copy ${data}
+        </button>`;
+    });
+
+  </script>
+</body>
+
+</html>
