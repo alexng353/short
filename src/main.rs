@@ -75,6 +75,15 @@ async fn main() -> anyhow::Result<()> {
         panic!("JWT_SECRET is not set. Defaulting to 'secret'");
     }
 
+    {
+        let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL is not set");
+        let dbfile = database_url.trim_start_matches("sqlite://");
+        if !std::path::Path::new(dbfile).exists() {
+            info!("Database file {} does not exist. Creating it.", dbfile);
+            std::fs::create_dir_all(dbfile).unwrap();
+        }
+    }
+
     let subscriber = tracing_subscriber::FmtSubscriber::new();
     tracing::subscriber::set_global_default(subscriber)?;
 

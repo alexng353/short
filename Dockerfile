@@ -12,7 +12,7 @@ RUN DATABASE_URL=sqlite://build.db cargo sqlx migrate run
 
 RUN DATABASE_URL=sqlite://build.db cargo build --release
 
-FROM debian:bullseye-slim
+FROM rust:1.87
 
 WORKDIR /app
 
