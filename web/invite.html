@@ -32,12 +32,13 @@
         },
       });
       const data = await response.text();
+      const host = window.location.origin;
+      const inviteLink = `${host}/signup.html?invite_code=${data}`;
       document.getElementById('invite-response').innerHTML =
-        `<button onclick="navigator.clipboard.writeText('${data}')">
-          Copy ${data}
+        `<button onclick="navigator.clipboard.writeText('${inviteLink}')">
+          Copy ${inviteLink}
         </button>`;
     });
-
   </script>
 </body>
 

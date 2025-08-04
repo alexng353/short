@@ -7,6 +7,15 @@
   <title>Document</title>
   <script src="index.js" defer></script>
   <link rel="stylesheet" href="index.css" />
+  <script>
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const inviteCode = urlParams.get('invite_code');
+
+    if (inviteCode) {
+      document.getElementById('invite_code').value = inviteCode;
+    }
+  </script>
 </head>
 
 <body class="contentbox">
