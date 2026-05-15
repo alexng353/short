@@ -16,8 +16,6 @@ use crate::util::cookies::{auth_cookie, short_auth_companion};
 use crate::*;
 use crate::{extractors::users::UserId, structs::user::User, util::auth::JWTClaims};
 
-use super::*;
-
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct ChangePasswordBody {
     old_password: String,
@@ -96,12 +94,10 @@ pub async fn change_password(
         Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     };
 
-    (
-        StatusCode::OK,
-        [
-            (SET_COOKIE, auth_cookie(&token_str)),
-            (SET_COOKIE, short_auth_companion()),
-        ],
-    )
-        .into_response()
+    axum::http::Response::builder()
+        .status(StatusCode::OK)
+        .header(SET_COOKIE, auth_cookie(&token_str))
+        .header(SET_COOKIE, short_auth_companion())
+        .body(axum::body::Body::empty())
+        .unwrap()
 }

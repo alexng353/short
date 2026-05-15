@@ -82,13 +82,11 @@ pub async fn signup(
         .sign_with_key(&state.jwt_key)
         .context("Failed to sign JWT")?;
 
-    Ok((
-        StatusCode::SEE_OTHER,
-        [
-            (SET_COOKIE, crate::util::cookies::auth_cookie(&token_str)),
-            (SET_COOKIE, crate::util::cookies::short_auth_companion()),
-            (LOCATION, "/dashboard".into()),
-        ],
-    )
-        .into_response())
+    Ok(axum::http::Response::builder()
+        .status(StatusCode::SEE_OTHER)
+        .header(SET_COOKIE, crate::util::cookies::auth_cookie(&token_str))
+        .header(SET_COOKIE, crate::util::cookies::short_auth_companion())
+        .header(LOCATION, "/dashboard")
+        .body(axum::body::Body::empty())
+        .unwrap())
 }

@@ -75,13 +75,11 @@ pub async fn login(
         Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     };
 
-    (
-        StatusCode::SEE_OTHER,
-        [
-            (SET_COOKIE, auth_cookie(&token_str)),
-            (SET_COOKIE, short_auth_companion()),
-            (LOCATION, "/dashboard".into()),
-        ],
-    )
-        .into_response()
+    axum::http::Response::builder()
+        .status(StatusCode::SEE_OTHER)
+        .header(SET_COOKIE, auth_cookie(&token_str))
+        .header(SET_COOKIE, short_auth_companion())
+        .header(LOCATION, "/dashboard")
+        .body(axum::body::Body::empty())
+        .unwrap()
 }
