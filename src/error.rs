@@ -17,6 +17,7 @@ pub enum Errors {
 pub enum AppError {
     AnyhowError(AnyhowError),
     Error(Errors),
+    Status(StatusCode, String),
 }
 
 impl From<anyhow::Error> for AppError {
@@ -53,6 +54,8 @@ impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         match self {
             AppError::AnyhowError(e) => e.into_response(),
+
+            AppError::Status(s, m) => (s, m).into_response(),
 
             AppError::Error(e) => match e {
                 Errors::TooBig(size_limit) => (
