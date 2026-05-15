@@ -55,8 +55,10 @@ pub async fn change_password(
         Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     };
 
-    let old_hash =
-        PasswordHash::parse(&user.password_hash, Encoding::B64).expect("Password hash parse");
+    let old_hash = match PasswordHash::parse(&user.password_hash, Encoding::B64) {
+        Ok(h) => h,
+        Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, "Bad hash").into_response(),
+    };
     if argon2
         .verify_password(body.old_password.as_bytes(), &old_hash)
         .is_err()

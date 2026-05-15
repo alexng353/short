@@ -28,6 +28,7 @@ pub fn short_auth_companion() -> String {
     }
 }
 
+/// Clear the non-HttpOnly companion cookie (used by logout).
 pub fn clear_short_auth_companion() -> String {
     if cfg!(debug_assertions) {
         "short-auth=; Max-Age=0; Path=/; SameSite=Lax".to_string()

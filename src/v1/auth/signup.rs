@@ -1,3 +1,4 @@
+use crate::util::cookies::{auth_cookie, short_auth_companion};
 use crate::*;
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
@@ -84,8 +85,8 @@ pub async fn signup(
 
     Ok(axum::http::Response::builder()
         .status(StatusCode::SEE_OTHER)
-        .header(SET_COOKIE, crate::util::cookies::auth_cookie(&token_str))
-        .header(SET_COOKIE, crate::util::cookies::short_auth_companion())
+        .header(SET_COOKIE, auth_cookie(&token_str))
+        .header(SET_COOKIE, short_auth_companion())
         .header(LOCATION, "/dashboard")
         .body(axum::body::Body::empty())
         .unwrap())
