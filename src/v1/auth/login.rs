@@ -1,4 +1,4 @@
-use crate::{structs::user::User, util::cookies::{auth_cookie, short_auth_companion}, *};
+use crate::{util::cookies::{auth_cookie, short_auth_companion}, *};
 use argon2::{
     password_hash::{Encoding, PasswordHash, PasswordVerifier},
     Argon2,
