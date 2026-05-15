@@ -10,6 +10,7 @@ use utoipa_swagger_ui::SwaggerUi;
 
 // tags
 use v1::{
+    admin::ADMIN_TAG,
     auth::AUTH_TAG,
     shorturls::SHORTURLS_TAG,
     // exercises::EXERCISES_TAG,
@@ -36,6 +37,7 @@ pub(crate) use utoipa::ToSchema;
 #[derive(OpenApi)]
 #[openapi(
     tags(
+        (name = ADMIN_TAG, description = "Admin API endpoints"),
         (name = AUTH_TAG, description = "Authentication API endpoints"),
         (name = SHORTURLS_TAG, description = "Short URL API endpoints"),
     ),

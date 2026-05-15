@@ -3,9 +3,10 @@ pub(super) use utoipa_axum::routes;
 
 use crate::AppState;
 
+pub mod admin;
 pub mod auth;
-pub mod user;
 pub mod shorturls;
+pub mod user;
 
 pub fn router(state: AppState) -> OpenApiRouter {
     OpenApiRouter::new()
@@ -13,4 +14,5 @@ pub fn router(state: AppState) -> OpenApiRouter {
         .nest("/auth", auth::router(state.clone()))
         .nest("/user", user::router(state.clone()))
         .nest("/shorturls", shorturls::router(state.clone()))
+        .nest("/admin", admin::router(state.clone()))
 }
