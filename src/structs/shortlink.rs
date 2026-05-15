@@ -8,4 +8,5 @@ pub struct ShortLink {
     pub long: String,
     pub short: String,
     pub created_at: chrono::NaiveDateTime,
+    pub updated_at: Option<chrono::NaiveDateTime>,
 }
