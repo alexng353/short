@@ -8,7 +8,7 @@ use crate::*;
     path = "/{id}",
     responses(
         (status = NO_CONTENT, description = "Revoked"),
-        (status = CONFLICT, description = "Already used"),
+        (status = NOT_FOUND, description = "Not found or already used"),
     ),
     tag = super::super::ADMIN_TAG
 )]
@@ -25,7 +25,7 @@ pub async fn revoke(
     .await?;
     if res.rows_affected() == 0 {
         return Err(AppError::Status(
-            StatusCode::CONFLICT,
+            StatusCode::NOT_FOUND,
             "invite not found or already used".into(),
         ));
     }
