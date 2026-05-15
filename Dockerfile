@@ -2,7 +2,7 @@ FROM rust:1.87 as builder
 
 WORKDIR /app
 
-RUN cargo install sqlx-cli
+RUN cargo install sqlx-cli --locked --no-default-features --features sqlite,rustls
 
 COPY . .
 
