@@ -38,7 +38,7 @@ pub async fn revoke(
         ));
     }
 
-    sqlx::query!(
+    let res = sqlx::query!(
         "UPDATE users
          SET disabled_at = datetime('now','localtime'),
              token_version = token_version + 1
@@ -47,6 +47,10 @@ pub async fn revoke(
     )
     .execute(&*state.db)
     .await?;
+
+    if res.rows_affected() == 0 {
+        return Err(AppError::Status(StatusCode::NOT_FOUND, "user not found".into()));
+    }
 
     Ok(StatusCode::NO_CONTENT)
 }
@@ -62,11 +66,16 @@ pub async fn restore(
     _: AdminUserId,
     Path(id): Path<i64>,
 ) -> Result<StatusCode, AppError> {
-    sqlx::query!(
+    let res = sqlx::query!(
         "UPDATE users SET disabled_at = NULL WHERE id = $1",
         id
     )
     .execute(&*state.db)
     .await?;
+
+    if res.rows_affected() == 0 {
+        return Err(AppError::Status(StatusCode::NOT_FOUND, "user not found".into()));
+    }
+
     Ok(StatusCode::NO_CONTENT)
 }

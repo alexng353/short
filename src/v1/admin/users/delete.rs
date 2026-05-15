@@ -51,8 +51,13 @@ pub async fn delete(
         ));
     }
 
-    sqlx::query!("DELETE FROM users WHERE id = $1", id)
+    let res = sqlx::query!("DELETE FROM users WHERE id = $1", id)
         .execute(&*state.db)
         .await?;
+
+    if res.rows_affected() == 0 {
+        return Err(AppError::Status(StatusCode::NOT_FOUND, "user not found".into()));
+    }
+
     Ok(StatusCode::NO_CONTENT)
 }

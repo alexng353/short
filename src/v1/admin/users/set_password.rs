@@ -30,7 +30,7 @@ pub async fn set_password(
         .expect("hash")
         .to_string();
 
-    sqlx::query!(
+    let res = sqlx::query!(
         "UPDATE users
          SET password_hash = $1, token_version = token_version + 1
          WHERE id = $2",
@@ -39,6 +39,10 @@ pub async fn set_password(
     )
     .execute(&*state.db)
     .await?;
+
+    if res.rows_affected() == 0 {
+        return Err(AppError::Status(StatusCode::NOT_FOUND, "user not found".into()));
+    }
 
     Ok(StatusCode::NO_CONTENT)
 }

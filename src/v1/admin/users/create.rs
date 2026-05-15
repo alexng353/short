@@ -21,7 +21,7 @@ pub struct CreateUserBody {
     post,
     path = "",
     responses(
-        (status = OK, body = AdminUserRow),
+        (status = CREATED, body = AdminUserRow),
         (status = CONFLICT, body = String, description = "Username taken"),
     ),
     tag = super::super::ADMIN_TAG
@@ -51,7 +51,7 @@ pub async fn create(
     .await;
 
     match res {
-        Ok(row) => Ok((StatusCode::OK, Json(row))),
+        Ok(row) => Ok((StatusCode::CREATED, Json(row))),
         Err(sqlx::Error::Database(e)) if e.is_unique_violation() => {
             Err(AppError::Status(StatusCode::CONFLICT, "username taken".into()))
         }

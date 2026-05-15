@@ -70,6 +70,9 @@ pub async fn update(
 
     match res {
         Ok(row) => Ok(Json(row)),
+        Err(sqlx::Error::RowNotFound) => {
+            Err(AppError::Status(StatusCode::NOT_FOUND, "user not found".into()))
+        }
         Err(sqlx::Error::Database(e)) if e.is_unique_violation() => {
             Err(AppError::Status(StatusCode::CONFLICT, "username taken".into()))
         }
