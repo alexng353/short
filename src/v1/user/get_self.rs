@@ -2,9 +2,9 @@ use crate::{extractors::users::UserId, *};
 
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct UserResponse {
-    id: i64,
-    name: String,
-    username: String,
+    pub id: i64,
+    pub name: String,
+    pub username: String,
 }
 
 /// Get self
