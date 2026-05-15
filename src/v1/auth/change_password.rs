@@ -4,15 +4,17 @@ use argon2::{
 };
 use axum::{
     extract::State,
-    http::StatusCode,
+    http::{header::SET_COOKIE, StatusCode},
     response::{IntoResponse, Response},
     Form,
 };
+use jwt::SignWithKey;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
+use crate::util::cookies::{auth_cookie, short_auth_companion};
 use crate::*;
-use crate::{extractors::users::UserId, structs::user::User};
+use crate::{extractors::users::UserId, structs::user::User, util::auth::JWTClaims};
 
 use super::*;
 
@@ -22,7 +24,6 @@ pub struct ChangePasswordBody {
     new_password: String,
 }
 
-/// create invite
 #[utoipa::path(
     post,
     path = "/change-password",
@@ -43,47 +44,64 @@ pub async fn change_password(
     let user = match sqlx::query_as!(
         User,
         "SELECT id, name, username, password_hash, is_admin, created_at
-        FROM users
-        WHERE id = $1",
+        FROM users WHERE id = $1",
         user_id
     )
     .fetch_one(&*state.db)
     .await
     {
-        Ok(user) => user,
+        Ok(u) => u,
         Err(sqlx::Error::RowNotFound) => {
             return (StatusCode::NOT_FOUND, "User not found").into_response()
         }
         Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     };
 
-    let hash =
-        PasswordHash::parse(&user.password_hash, Encoding::B64).expect("Password hashing failed");
-
-    if !argon2
-        .verify_password(body.old_password.as_bytes(), &hash)
-        .is_ok()
+    let old_hash =
+        PasswordHash::parse(&user.password_hash, Encoding::B64).expect("Password hash parse");
+    if argon2
+        .verify_password(body.old_password.as_bytes(), &old_hash)
+        .is_err()
     {
         return (StatusCode::UNAUTHORIZED, "Incorrect password").into_response();
     }
 
-    let hash = argon2
+    let new_hash = argon2
         .hash_password(body.new_password.as_bytes(), &salt)
         .expect("Password hashing failed")
         .to_string();
 
-    match sqlx::query!(
-        "UPDATE users SET password_hash = $1 WHERE id = $2",
-        hash,
+    let updated = sqlx::query!(
+        "UPDATE users
+         SET password_hash = $1, token_version = token_version + 1
+         WHERE id = $2
+         RETURNING token_version",
+        new_hash,
         user_id
     )
-    .execute(&*state.db)
-    .await
-    {
-        Ok(_) => StatusCode::OK.into_response(),
+    .fetch_one(&*state.db)
+    .await;
+
+    let new_tv = match updated {
+        Ok(r) => r.token_version,
         Err(e) => {
             error!("Failed to update password: {}", e);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
         }
-    }
+    };
+
+    let claims = JWTClaims::new(user.id, user.name, user.username, new_tv);
+    let token_str = match claims.sign_with_key(&state.jwt_key) {
+        Ok(t) => t,
+        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    };
+
+    (
+        StatusCode::OK,
+        [
+            (SET_COOKIE, auth_cookie(&token_str)),
+            (SET_COOKIE, short_auth_companion()),
+        ],
+    )
+        .into_response()
 }
