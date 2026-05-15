@@ -68,7 +68,7 @@ pub async fn signup(
     let user = query!(
         "INSERT INTO users (name, username, password_hash)
         VALUES ($1, lower($2), $3)
-        RETURNING id, name, username, password_hash, is_admin, created_at",
+        RETURNING id, name, username, password_hash, is_admin, token_version, created_at",
         body.name,
         body.username,
         hash
@@ -76,7 +76,7 @@ pub async fn signup(
     .fetch_one(&*state.db)
     .await?;
 
-    let claims = JWTClaims::new(user.id, user.name, user.username);
+    let claims = JWTClaims::new(user.id, user.name, user.username, user.token_version);
 
     let token_str = claims
         .sign_with_key(&state.jwt_key)
@@ -85,15 +85,10 @@ pub async fn signup(
     Ok((
         StatusCode::SEE_OTHER,
         [
-            (
-                SET_COOKIE,
-                if cfg!(debug_assertions) {
-                    format!("short-token={token_str}; Max-Age=86400; Path=/; HttpOnly")
-                } else {
-                    format!("__Secure-short-token={token_str}; Max-Age=86400; Path=/; HttpOnly; SameSite=Strict; Secure")
-                },
-            ),
+            (SET_COOKIE, crate::util::cookies::auth_cookie(&token_str)),
+            (SET_COOKIE, crate::util::cookies::short_auth_companion()),
             (LOCATION, "/dashboard".into()),
         ],
-    ).into_response())
+    )
+        .into_response())
 }
