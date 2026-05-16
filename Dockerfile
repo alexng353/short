@@ -16,8 +16,11 @@ RUN touch build.db
 RUN DATABASE_URL=sqlite://build.db cargo sqlx migrate run
 RUN DATABASE_URL=sqlite://build.db cargo build --release
 
-FROM rust:1.87
+FROM debian:bookworm-slim
 WORKDIR /app
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/target/release/short /app/short
 COPY --from=builder /app/web /app/web
 CMD [ "/app/short" ]
