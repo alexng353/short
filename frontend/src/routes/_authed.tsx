@@ -15,12 +15,12 @@ export const Route = createFileRoute("/_authed")({
 });
 
 function AuthedLayout() {
-  // self isn't used here, but is in route context for children via Route.useRouteContext()
+  const { self } = Route.useRouteContext();
   return (
     <div>
       <nav className="topnav">
         <Link to="/dashboard">Dashboard</Link>
-        <a href="/admin/users">Admin</a>
+        {self.is_admin && <Link to="/admin/users">Admin</Link>}
         <form method="post" action="/api/v1/auth/logout" style={{ display: "inline" }}>
           <button type="submit">Logout</button>
         </form>
