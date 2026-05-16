@@ -32,12 +32,276 @@
         }
       }
     },
+    "/api/v1/admin/invites": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "operationId": "list",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InviteRow"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/invites/{id}": {
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "operationId": "revoke",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Revoked"
+          },
+          "404": {
+            "description": "Not found or already used"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "operationId": "list",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminUserRow"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "operationId": "create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserRow"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Username taken",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{id}": {
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "operationId": "delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "409": {
+            "description": "User has shortlinks or is last admin"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "admin"
+        ],
+        "operationId": "update",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserRow"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Username taken or would leave zero admins"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{id}/password": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "operationId": "set_password",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPasswordBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Password updated"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{id}/restore": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "operationId": "restore",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Restored"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{id}/revoke": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "operationId": "revoke",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Revoked"
+          },
+          "409": {
+            "description": "Self-revoke or last-admin disallowed"
+          }
+        }
+      }
+    },
     "/api/v1/auth/change-password": {
       "post": {
         "tags": [
           "auth"
         ],
-        "summary": "create invite",
         "operationId": "change_password",
         "requestBody": {
           "content": {
@@ -64,9 +328,30 @@
         "tags": [
           "auth"
         ],
-        "summary": "create invite",
+        "summary": "Create invite (admin only)",
         "operationId": "invite",
-        "responses": {}
+        "responses": {
+          "200": {
+            "description": "Invite code",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not an admin",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/auth/login": {
@@ -125,11 +410,10 @@
         "tags": [
           "auth"
         ],
-        "summary": "Logout",
         "operationId": "logout",
         "responses": {
           "303": {
-            "description": "Redirect to dashboard"
+            "description": "Redirect to /"
           }
         }
       }
@@ -237,6 +521,43 @@
         }
       }
     },
+    "/api/v1/shorturls/{id}": {
+      "patch": {
+        "tags": [
+          "shorturls"
+        ],
+        "operationId": "update",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Updated"
+          },
+          "404": {
+            "description": "Not found or not owned"
+          }
+        }
+      }
+    },
     "/api/v1/user/self": {
       "get": {
         "tags": [
@@ -254,6 +575,37 @@
                 }
               }
             }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "update_self",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSelfBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Username taken"
           }
         }
       }
@@ -289,6 +641,42 @@
   },
   "components": {
     "schemas": {
+      "AdminUserRow": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "username",
+          "is_admin",
+          "created_at"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "disabled_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "is_admin": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          }
+        }
+      },
       "ChangePasswordBody": {
         "type": "object",
         "required": [
@@ -301,6 +689,61 @@
           },
           "old_password": {
             "type": "string"
+          }
+        }
+      },
+      "CreateUserBody": {
+        "type": "object",
+        "required": [
+          "name",
+          "username",
+          "password",
+          "is_admin"
+        ],
+        "properties": {
+          "is_admin": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          }
+        }
+      },
+      "InviteRow": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "created_at",
+          "created_by_username"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by_username": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "used_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -336,6 +779,17 @@
           }
         }
       },
+      "SetPasswordBody": {
+        "type": "object",
+        "required": [
+          "password"
+        ],
+        "properties": {
+          "password": {
+            "type": "string"
+          }
+        }
+      },
       "SignupBody": {
         "type": "object",
         "required": [
@@ -356,6 +810,57 @@
           },
           "username": {
             "type": "string"
+          }
+        }
+      },
+      "UpdateBody": {
+        "type": "object",
+        "required": [
+          "long"
+        ],
+        "properties": {
+          "long": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateSelfBody": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "username": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "UpdateUserBody": {
+        "type": "object",
+        "properties": {
+          "is_admin": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "username": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       },
@@ -382,6 +887,10 @@
     }
   },
   "tags": [
+    {
+      "name": "admin",
+      "description": "Admin API endpoints"
+    },
     {
       "name": "auth",
       "description": "Authentication API endpoints"
