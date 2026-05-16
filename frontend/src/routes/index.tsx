@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 
 function hasAuthCookie() {
   return document.cookie.split("; ").some((c) => c.startsWith("short-auth=1"));
@@ -6,8 +6,7 @@ function hasAuthCookie() {
 
 export const Route = createFileRoute("/")({
   beforeLoad: () => {
-    // /dashboard exists in Phase 8; navigate imperatively to avoid strict route-type error
-    if (hasAuthCookie()) window.location.assign("/dashboard");
+    if (hasAuthCookie()) throw redirect({ to: "/dashboard" });
   },
   component: Landing,
 });

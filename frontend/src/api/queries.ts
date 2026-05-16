@@ -5,6 +5,7 @@ export interface SelfUser {
   id: number;
   name: string;
   username: string;
+  is_admin: boolean;
 }
 
 export const useSelf = () =>
