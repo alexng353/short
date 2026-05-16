@@ -1,0 +1,75 @@
+body {
+  background-color: #0a0a0a;
+  color: #aaa;
+  font-family: sans-serif;
+}
+
+.contentbox {
+  display: flex;
+  justify-content: center;
+}
+
+.contentbox>* {
+  max-width: 1024px;
+  width: 100%;
+}
+
+.navbar {
+  max-width: 1024px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.horizontal {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* center the table on the page */
+#linksTable {
+  margin: 1rem auto;        /* auto left/right margins */
+  width: 90%;               /* or whatever width you prefer */
+  /* max-width: 800px; */
+  border-collapse: collapse;/* collapse cell borders */
+}
+
+/* center all cell contents */
+#linksTable th,
+#linksTable td {
+  text-align: center;       /* horizontal centering */
+  vertical-align: middle;   /* vertical centering */
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #ccc;   /* optional: visible borders */
+}
+
+/* ensure buttons don't stretch awkwardly */
+.copy-link,
+.delete-link {
+  display: inline-block;    /* shrink to content */
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+/* optional: a little zebra striping for readability */
+#linksTable tbody tr:nth-child(odd) {
+  background: #a9a9a9;
+}
+
+#linksTable tbody tr:nth-child(even) {
+  background: #f9f9f9;
+}
