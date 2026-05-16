@@ -116,8 +116,15 @@ async fn main() -> anyhow::Result<()> {
         .await?;
     }
 
-    let serve_dir = ServeDir::new("web")
-        .not_found_service(tower_http::services::ServeFile::new("web/index.html"));
+    let spa_fallback = tower::ServiceBuilder::new()
+        .map_response(|mut res: axum::http::Response<tower_http::services::fs::ServeFileSystemResponseBody>| {
+            // SPA fallback: ServeFile returns 404 when the path has no static file,
+            // but we always want 200 so the browser treats it as a normal navigation.
+            *res.status_mut() = axum::http::StatusCode::OK;
+            res
+        })
+        .service(tower_http::services::ServeFile::new("web/index.html"));
+    let serve_dir = ServeDir::new("web").not_found_service(spa_fallback);
 
     let (router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
         .routes(routes!(health_check))
