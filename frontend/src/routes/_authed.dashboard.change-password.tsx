@@ -1,6 +1,14 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
+import { Field, FieldGroup, FieldLabel } from "~/components/ui/field";
+import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/button";
+import { Spinner } from "~/components/ui/spinner";
+import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
+import { ArrowLeftIcon, AlertCircleIcon } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authed/dashboard/change-password")({
   component: ChangePassword,
@@ -21,23 +29,73 @@ function ChangePassword() {
       });
       if (!res.ok) throw new Error(await res.text());
     },
-    onSuccess: () => nav({ to: "/dashboard" }),
+    onSuccess: () => {
+      toast.success("Password changed");
+      nav({ to: "/dashboard" });
+    },
   });
 
   return (
-    <div className="container">
-      <h1>Change password</h1>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          change.mutate();
-        }}
-      >
-        <input type="password" placeholder="Old password" value={oldPw} onChange={(e) => setOld(e.target.value)} required />
-        <input type="password" placeholder="New password" value={newPw} onChange={(e) => setNew(e.target.value)} required />
-        {change.error && <p style={{ color: "crimson" }}>{(change.error as Error).message}</p>}
-        <button type="submit" disabled={change.isPending}>Change</button>
-      </form>
+    <div className="mx-auto w-full max-w-md px-6 py-10">
+      <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
+        <Link to="/dashboard">
+          <ArrowLeftIcon data-icon="inline-start" />
+          Back to links
+        </Link>
+      </Button>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Change password</CardTitle>
+          <CardDescription>Pick something you'll actually remember.</CardDescription>
+        </CardHeader>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            change.mutate();
+          }}
+        >
+          <CardContent>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="old_password">Current password</FieldLabel>
+                <Input
+                  id="old_password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={oldPw}
+                  onChange={(e) => setOld(e.target.value)}
+                  required
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="new_password">New password</FieldLabel>
+                <Input
+                  id="new_password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={newPw}
+                  onChange={(e) => setNew(e.target.value)}
+                  required
+                />
+              </Field>
+              {change.error && (
+                <Alert variant="destructive">
+                  <AlertCircleIcon />
+                  <AlertTitle>Couldn't change password</AlertTitle>
+                  <AlertDescription>{(change.error as Error).message}</AlertDescription>
+                </Alert>
+              )}
+            </FieldGroup>
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" disabled={change.isPending} className="w-full">
+              {change.isPending && <Spinner data-icon="inline-start" />}
+              {change.isPending ? "Changing…" : "Change password"}
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
     </div>
   );
 }

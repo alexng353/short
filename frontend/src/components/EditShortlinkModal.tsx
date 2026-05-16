@@ -1,6 +1,18 @@
 import { useState } from "react";
-import { Modal } from "./Modal";
 import { ShortLink, useUpdateUrl } from "../api/queries";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
+import { Button } from "~/components/ui/button";
+import { Field, FieldGroup, FieldLabel } from "~/components/ui/field";
+import { Input } from "~/components/ui/input";
+import { Spinner } from "~/components/ui/spinner";
+import { toast } from "sonner";
 
 export function EditShortlinkModal({
   link,
@@ -13,28 +25,50 @@ export function EditShortlinkModal({
   const update = useUpdateUrl();
 
   return (
-    <Modal open onClose={onClose}>
-      <h2>Edit /s/{link.short}</h2>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          update.mutate(
-            { id: link.id, long },
-            { onSuccess: onClose }
-          );
-        }}
-      >
-        <input
-          style={{ width: "100%", marginBottom: "1em" }}
-          value={long}
-          onChange={(e) => setLong(e.target.value)}
-          required
-        />
-        <div style={{ display: "flex", gap: ".5em", justifyContent: "flex-end" }}>
-          <button type="button" onClick={onClose}>Cancel</button>
-          <button type="submit" disabled={update.isPending}>Save</button>
-        </div>
-      </form>
-    </Modal>
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit /s/{link.short}</DialogTitle>
+          <DialogDescription>Update where this short link points.</DialogDescription>
+        </DialogHeader>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            update.mutate(
+              { id: link.id, long },
+              {
+                onSuccess: () => {
+                  toast.success("Link updated");
+                  onClose();
+                },
+                onError: (err) => toast.error((err as Error).message),
+              },
+            );
+          }}
+        >
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="long">Destination URL</FieldLabel>
+              <Input
+                id="long"
+                type="url"
+                value={long}
+                onChange={(e) => setLong(e.target.value)}
+                required
+              />
+            </Field>
+          </FieldGroup>
+          <DialogFooter className="mt-6">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={update.isPending}>
+              {update.isPending && <Spinner data-icon="inline-start" />}
+              {update.isPending ? "Saving…" : "Save"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

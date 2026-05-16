@@ -1,19 +1,29 @@
 import { useEffect, useRef } from "react";
 import QRCode from "qrcode";
-import { Modal } from "./Modal";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
+import { Button } from "~/components/ui/button";
+import { DownloadIcon } from "lucide-react";
 
 interface Variant {
   key: "light" | "dark" | "light-transparent" | "dark-transparent";
   label: string;
   dark: string;
   light: string;
+  bg: "checker" | "white" | "black";
 }
 
 const variants: Variant[] = [
-  { key: "light", label: "Light", dark: "#000000", light: "#ffffff" },
-  { key: "dark", label: "Dark", dark: "#ffffff", light: "#000000" },
-  { key: "light-transparent", label: "Light transparent", dark: "#000000", light: "#00000000" },
-  { key: "dark-transparent", label: "Dark transparent", dark: "#ffffff", light: "#00000000" },
+  { key: "light", label: "Light", dark: "#000000", light: "#ffffff", bg: "white" },
+  { key: "dark", label: "Dark", dark: "#ffffff", light: "#000000", bg: "black" },
+  { key: "light-transparent", label: "Light · transparent", dark: "#000000", light: "#00000000", bg: "checker" },
+  { key: "dark-transparent", label: "Dark · transparent", dark: "#ffffff", light: "#00000000", bg: "checker" },
 ];
 
 export function QRCodeModal({
@@ -54,22 +64,54 @@ export function QRCodeModal({
   };
 
   return (
-    <Modal open onClose={onClose}>
-      <h2>QR codes for /s/{short}</h2>
-      <div style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: "1em", alignItems: "center" }}>
-        {variants.map((v) => (
-          <div key={v.key} style={{ display: "contents" }}>
-            <div style={{ background: v.key.includes("transparent") ? "repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 16px 16px" : "transparent", padding: 4 }}>
-              <canvas ref={(el) => { refs.current[v.key] = el; }} width={128} height={128} style={{ width: 96, height: 96 }} />
-            </div>
-            <span>{v.label}</span>
-            <button onClick={() => download(v.key)}>Download {short}-{v.key}.png</button>
-          </div>
-        ))}
-      </div>
-      <div style={{ marginTop: "1em", textAlign: "right" }}>
-        <button onClick={onClose}>Close</button>
-      </div>
-    </Modal>
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>QR codes</DialogTitle>
+          <DialogDescription>
+            <span className="font-mono text-foreground">/s/{short}</span> · pick a variant to download.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid grid-cols-2 gap-3">
+          {variants.map((v) => (
+            <button
+              key={v.key}
+              type="button"
+              onClick={() => download(v.key)}
+              className="group flex flex-col items-center gap-3 rounded-lg border border-border/60 bg-card/50 p-3 text-left transition-colors hover:border-border hover:bg-card"
+            >
+              <div
+                className="flex size-32 items-center justify-center rounded-md"
+                style={
+                  v.bg === "checker"
+                    ? { background: "repeating-conic-gradient(oklch(0.5 0 0) 0% 25%, oklch(0.7 0 0) 0% 50%) 50% / 12px 12px" }
+                    : { background: v.bg === "white" ? "#ffffff" : "#000000" }
+                }
+              >
+                <canvas
+                  ref={(el) => {
+                    refs.current[v.key] = el;
+                  }}
+                  width={128}
+                  height={128}
+                  className="size-28"
+                />
+              </div>
+              <div className="flex w-full items-center justify-between text-xs">
+                <span className="text-muted-foreground">{v.label}</span>
+                <DownloadIcon className="size-3.5 text-muted-foreground transition-colors group-hover:text-foreground" />
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
