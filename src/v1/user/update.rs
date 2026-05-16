@@ -31,7 +31,7 @@ pub async fn update_self(
            name = COALESCE($2, name),
            username = COALESCE(lower($3), username)
          WHERE id = $1
-         RETURNING id, name, username",
+         RETURNING id, name, username, is_admin",
         user_id,
         body.name,
         body.username

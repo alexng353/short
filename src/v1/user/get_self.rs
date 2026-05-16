@@ -5,15 +5,13 @@ pub struct UserResponse {
     pub id: i64,
     pub name: String,
     pub username: String,
+    pub is_admin: bool,
 }
 
-/// Get self
 #[utoipa::path(
     get,
     path = "/self",
-    responses(
-        (status = OK, body = UserResponse)
-    ),
+    responses((status = OK, body = UserResponse)),
     tag = super::AUTH_TAG
 )]
 #[axum::debug_handler]
@@ -23,13 +21,10 @@ pub async fn get_self(
 ) -> Result<Json<UserResponse>, AppError> {
     let user = sqlx::query_as!(
         UserResponse,
-        "SELECT id, name, username 
-        FROM users
-        WHERE id = $1",
+        "SELECT id, name, username, is_admin FROM users WHERE id = $1",
         user_id
     )
     .fetch_one(&*state.db)
     .await?;
-
     Ok(Json(user))
 }
