@@ -116,12 +116,15 @@ async fn main() -> anyhow::Result<()> {
         .await?;
     }
 
+    let serve_dir = ServeDir::new("web")
+        .not_found_service(tower_http::services::ServeFile::new("web/index.html"));
+
     let (router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
         .routes(routes!(health_check))
         .routes(routes!(catchall::catchall))
         .with_state(state.clone())
         .nest("/api/v1", v1::router(state.clone()))
-        .fallback_service(ServeDir::new("web"))
+        .fallback_service(serve_dir)
         .split_for_parts();
 
     std::fs::write("openapi.json", api.to_pretty_json()?.as_bytes()).unwrap();
