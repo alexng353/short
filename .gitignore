@@ -1,3 +1,5 @@
 /target
 .env
 *.db
+frontend/node_modules
+frontend/dist
